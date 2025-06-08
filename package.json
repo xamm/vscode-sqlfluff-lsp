@@ -1,0 +1,261 @@
+{
+    "name": "sqlfluff",
+    "displayName": "SQLFluff for VS Code",
+    "description": "Linting and formatting for SQL files using SQLFluff, with support for multiple dialects and project configuration.",
+    "version": "1.0.0",
+    "preview": true,
+    "serverInfo": {
+        "name": "SQLFluff",
+        "module": "sqlfluff"
+    },
+    "publisher": "sqlfluff",
+    "license": "MIT",
+    "homepage": "https://github.com/sqlfluff/vscode-sqlfluff",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/sqlfluff/vscode-sqlfluff.git"
+    },
+    "bugs": {
+        "url": "https://github.com/sqlfluff/vscode-sqlfluff/issues"
+    },
+    "galleryBanner": {
+        "color": "#1e415e",
+        "theme": "dark"
+    },
+    "keywords": [
+        "sql",
+        "sqlfluff",
+        "formatter",
+        "linter",
+        "syntax",
+        "snowflake",
+        "postgresql",
+        "mysql",
+        "redshift",
+        "bigquery"
+    ],
+    "engines": {
+        "vscode": "^1.78.0"
+    },
+    "categories": [
+        "Programming Languages",
+        "Linters",
+        "Formatters"
+    ],
+    "extensionDependencies": [
+        "ms-python.python"
+    ],
+    "capabilities": {
+        "virtualWorkspaces": {
+            "supported": false,
+            "description": "Virtual Workspaces are not supported with SQLFluff for VS Code."
+        }
+    },
+    "activationEvents": [
+        "onLanguage:sql",
+        "onLanguage:snowflake-sql",
+        "onLanguage:bigquery-sql",
+        "onLanguage:postgres-sql",
+        "onLanguage:mysql-sql",
+        "onLanguage:tsql",
+        "workspaceContains:*.sql"
+    ],
+    "main": "./dist/extension.js",
+    "scripts": {
+        "vscode:prepublish": "npm run package",
+        "compile": "webpack",
+        "watch": "webpack --watch",
+        "package": "webpack --mode production --devtool source-map --config ./webpack.config.js",
+        "compile-tests": "tsc -p . --outDir out",
+        "watch-tests": "tsc -p . -w --outDir out",
+        "pretest": "npm run compile-tests && npm run compile && npm run lint",
+        "lint": "eslint src --ext ts",
+        "format-check": "prettier --check 'src/**/*.ts' 'build/**/*.yml' '.github/**/*.yml'",
+        "test": "node ./out/test/runTest.js",
+        "vsce-package": "vsce package -o sqlfluff.vsix"
+    },
+    "contributes": {
+        "configuration": {
+            "properties": {
+                "sqlfluff.args": {
+                    "default": [],
+                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "scope": "resource",
+                    "type": "array"
+                },
+                "sqlfluff.path": {
+                    "default": [],
+                    "description": "When set to a path to sqlfluff binary, extension will use that. NOTE: Using this option may slowdown server response time.",
+                    "scope": "resource",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "sqlfluff.importStrategy": {
+                    "default": "useBundled",
+                    "description": "Defines where `sqlfluff` is imported from. This setting may be ignored if `sqlfluff.path` is set.",
+                    "enum": [
+                        "useBundled",
+                        "fromEnvironment"
+                    ],
+                    "enumDescriptions": [
+                        "Always use the bundled version of `sqlfluff`.",
+                        "Use `sqlfluff` from environment, fallback to bundled version only if `sqlfluff` not available in the environment."
+                    ],
+                    "scope": "resource",
+                    "type": "string"
+                },
+                "sqlfluff.diagnosticSeverity": {
+                    "default": "warning",
+                    "description": "Defines the severity of SQLFluff diagnostics. Can be set to 'error', 'warning', or 'information'.",
+                    "scope": "resource",
+                    "type": "string",
+                    "enum": [
+                        "error",
+                        "warning",
+                        "information",
+                        "hint"
+                    ],
+                    "enumDescriptions": [
+                        "Treat SQLFluff issues as errors.",
+                        "Treat SQLFluff issues as warnings.",
+                        "Treat SQLFluff issues as informational messages.",
+                        "Treat SQLFluff issues as hints."
+                    ]
+                },
+                "sqlfluff.dialect": {
+                    "description": "Defines the SQL dialect to use for linting and formatting. If not set, SQLFluff will attempt to detect the dialect automatically.",
+                    "scope": "resource",
+                    "type": "string",
+                    "enum": [
+                        "ansi",
+                        "bigquery",
+                        "clickhouse",
+                        "databricks",
+                        "hive",
+                        "mysql",
+                        "postgres",
+                        "redshift",
+                        "snowflake",
+                        "sqlite",
+                        "tsql"
+                    ],
+                    "enumDescriptions": [
+                        "ANSI SQL dialect.",
+                        "Google BigQuery SQL dialect.",
+                        "ClickHouse SQL dialect.",
+                        "Databricks SQL dialect.",
+                        "Apache Hive SQL dialect.",
+                        "MySQL SQL dialect.",
+                        "PostgreSQL SQL dialect.",
+                        "Amazon Redshift SQL dialect.",
+                        "Snowflake SQL dialect.",
+                        "SQLite SQL dialect.",
+                        "T-SQL (Transact-SQL) dialect."
+                    ]
+                },
+                "sqlfluff.templater": {
+                    "description": "Defines the templater to use for linting and formatting. If not set, SQLFluff will use the default templater.",
+                    "scope": "resource",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "enum": [
+                        "jinja",
+                        "dbt",
+                        "raw",
+                        "python"
+                    ],
+                    "enumDescriptions": [
+                        "Use Jinja templating.",
+                        "Use dbt templating.",
+                        "Use raw SQL without templating.",
+                        "Use Python templating.",
+                        "Do not override settings."
+                    ]
+                }
+            }
+        },
+        "commands": [
+            {
+                "title": "Restart Server",
+                "category": "SQLFluff",
+                "command": "sqlfluff.restart"
+            }
+        ],
+        "languages": [
+            {
+                "id": "sql",
+                "extensions": [
+                    ".sql"
+                ]
+            },
+            {
+                "id": "snowflake-sql",
+                "extensions": [
+                    ".sql",
+                    ".snowflake-sql"
+                ]
+            },
+            {
+                "id": "bigquery-sql",
+                "extensions": [
+                    ".sql",
+                    ".bigquery-sql"
+                ]
+            },
+            {
+                "id": "postgres-sql",
+                "aliases": [
+                    "postgresql"
+                ],
+                "extensions": [
+                    ".sql",
+                    ".pgsql"
+                ]
+            },
+            {
+                "id": "mysql-sql",
+                "extensions": [
+                    ".sql",
+                    ".mysql"
+                ]
+            },
+            {
+                "id": "tsql",
+                "extensions": [
+                    ".sql",
+                    ".tsql"
+                ]
+            }
+        ],
+        "documentFormattingProvider": true,
+        "dependencies": {
+            "@vscode/python-extension": "^1.0.5",
+            "fs-extra": "^11.2.0",
+            "vscode-languageclient": "^8.1.0"
+        },
+        "devDependencies": {
+            "@types/fs-extra": "^11.0.4",
+            "@types/vscode": "1.78.0",
+            "@types/glob": "^8.1.0",
+            "@types/node": "20.x",
+            "@typescript-eslint/eslint-plugin": "^6.17.0",
+            "@typescript-eslint/parser": "^6.17.0",
+            "@vscode/test-electron": "^2.3.8",
+            "@vscode/vsce": "^2.22.0",
+            "eslint": "^8.56.0",
+            "glob": "^10.3.10",
+            "prettier": "^3.1.1",
+            "typescript": "^5.3.3",
+            "ts-loader": "^9.5.1",
+            "webpack": "^5.89.0",
+            "webpack-cli": "^5.1.4"
+        }
+    }
+}
