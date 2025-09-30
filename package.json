@@ -8,7 +8,7 @@
         "name": "SQLFluff",
         "module": "sqlfluff"
     },
-    "publisher": "xamm",
+    "publisher": "xsw",
     "license": "MIT",
     "homepage": "https://github.com/xamm/vscode-sqlfluff-lsp",
     "repository": {
