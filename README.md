@@ -2,6 +2,8 @@
 
 A VS Code extension for SQLFluff, a SQL linter and formatter. SQLFluff is a popular, dialect-aware SQL linter and formatter that helps you write clean, consistent SQL code.
 
+This extension fully relies on the [SQLFLuff](https://github.com/sqlfluff/sqlfluff) linter and formatter. It simply provides very barebones integration into VS Code via the Language Server Protocol (LSP).
+
 ## Features
 
 - **SQL Linting**: Checks your SQL code for syntax errors, style issues, and best practices

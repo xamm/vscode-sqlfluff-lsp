@@ -1,5 +1,5 @@
 {
-    "name": "sqlfluff",
+    "name": "vscode-sqlfluff-lsp",
     "displayName": "SQLFluff for VS Code",
     "description": "Linting and formatting for SQL files using SQLFluff, with support for multiple dialects and project configuration.",
     "version": "1.0.0",
@@ -8,15 +8,15 @@
         "name": "SQLFluff",
         "module": "sqlfluff"
     },
-    "publisher": "sqlfluff",
+    "publisher": "xamm",
     "license": "MIT",
-    "homepage": "https://github.com/sqlfluff/vscode-sqlfluff",
+    "homepage": "https://github.com/xamm/vscode-sqlfluff-lsp",
     "repository": {
         "type": "git",
-        "url": "https://github.com/sqlfluff/vscode-sqlfluff.git"
+        "url": "https://github.com/xamm/vscode-sqlfluff-lsp.git"
     },
     "bugs": {
-        "url": "https://github.com/sqlfluff/vscode-sqlfluff/issues"
+        "url": "https://github.com/xamm/vscode-sqlfluff-lsp/issues"
     },
     "galleryBanner": {
         "color": "#1e415e",
