@@ -294,9 +294,9 @@ regex==2024.11.6 \
     --hash=sha256:fdd6028445d2460f33136c55eeb1f601ab06d74cb3347132e1c24250187500d9 \
     --hash=sha256:ff590880083d60acc0433f9c3f713c51f7ac6ebb9adf889c79a261ecf541aa91
     # via sqlfluff
-sqlfluff==3.4.2 \
-    --hash=sha256:14109d858da448a4bd0be5a107f4e48de33b1749e6cfc8cc03ec6c045bc9b8ad \
-    --hash=sha256:1777272e4fdac5adef1b89ec25675426e77285d4dc95a055b12bd24181e33f40
+sqlfluff==3.5.0 \
+    --hash=sha256:2d0a546078ffb021de7021b9a6c2a50e5eef590daa820d5f1b082d24a1d5e1d4 \
+    --hash=sha256:6e5fb7a0c491676ded68912245fc0627e88f8b0e6290bd4b54a65ce735f69716
     # via -r requirements.in
 tblib==3.1.0 \
     --hash=sha256:06404c2c9f07f66fee2d7d6ad43accc46f9c3361714d9b8426e7f47e595cd652 \
