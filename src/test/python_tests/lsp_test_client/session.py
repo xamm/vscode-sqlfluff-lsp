@@ -48,6 +48,7 @@ class LspSession(MethodDispatcher):
         shell=True needed for pytest-cov to work in subprocess.
         """
         environment = os.environ.copy()
+        environment["LS_IMPORT_STRATEGY"] = "fromEnvironment"
         project_path = os.fspath(PROJECT_ROOT)
         environment["PYTHONPATH"] = os.pathsep.join(
             value

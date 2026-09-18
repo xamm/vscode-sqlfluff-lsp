@@ -198,18 +198,37 @@ PostgreSQL, Redshift, Snowflake, SparkSQL, SQLite, Teradata, and TSQL.
 
 ## Development
 
+Install the declared toolchain (Python 3.10 floor, 3.14 current, uv) and Node
+dependencies:
+
+```bash
+mise install
+npm install
+```
+
 Build the extension:
 
 ```bash
-npm install
 npm run compile
 ```
 
 Run the Python fixture suite with dbt and the DuckDB adapter:
 
 ```bash
-uv run --extra dbt --with dbt-duckdb --with pytest --with pytest-asyncio \
-  --with pyhamcrest --with python-jsonrpc-server pytest src/test/python_tests -v
+uv run --extra dbt --group test pytest src/test/python_tests -v
+```
+
+Run the cross-version checks and lint with Nox:
+
+```bash
+uvx nox -s tests     # runs on Python 3.10 and 3.14
+uvx nox -P 3.14 -s lint
+```
+
+Upgrade locked dependencies:
+
+```bash
+uvx nox -s update_packages
 ```
 
 ## License

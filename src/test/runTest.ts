@@ -10,7 +10,11 @@ async function makeWorkspace(fixtureDirectory: string, python: string): Promise<
     fsExtra.ensureDirSync(path.join(workspace, '.vscode'));
     fs.writeFileSync(
         path.join(workspace, '.vscode', 'settings.json'),
-        `${JSON.stringify({ ['sqlfluff.interpreter']: [python] }, null, 2)}\n`,
+        `${JSON.stringify(
+            { ['sqlfluff.interpreter']: [python], ['sqlfluff.importStrategy']: 'fromEnvironment' },
+            null,
+            2,
+        )}\n`,
     );
     return workspace;
 }
@@ -25,7 +29,7 @@ async function main(): Promise<void> {
     const python = process.env.SQLFLUFF_TEST_PYTHON ?? defaultPython;
     if (!fs.existsSync(python)) {
         throw new Error(
-            `Python interpreter not found at ${python}; run: uv sync --extra dbt && uv pip install dbt-duckdb (or set SQLFLUFF_TEST_PYTHON)`,
+            `Python interpreter not found at ${python}; run: uv sync --extra dbt --group test (or set SQLFLUFF_TEST_PYTHON)`,
         );
     }
 

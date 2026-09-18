@@ -1,0 +1,7 @@
+# Toolchain for development and testing.
+# Python: 3.10 is the minimum supported runtime (requires-python in
+# pyproject.toml); 3.14 is the current development default. uv is the
+# dependency manager. Node stays outside mise (npm per package.json).
+[tools]
+python = ["3.10", "3.14"]
+uv = "0.12"

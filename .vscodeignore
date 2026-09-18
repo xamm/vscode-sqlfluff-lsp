@@ -20,8 +20,8 @@ bundled/libs/*.dist-info/**
 noxfile.py
 .pytest_cache/**
 .pylintrc
-**/requirements.txt
-**/requirements.in
+uv.lock
+.mise.toml
 **/tool/_debug_server.py
 !sqlfluff_lsp/**
 !pyproject.toml
