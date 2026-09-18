@@ -9,14 +9,28 @@ description = "Persistent SQLFluff language server and MCP server"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "sqlfluff>=4.0,<5",
-    "pygls>=1.3,<2",
     "mcp>=1.2",
+    "pygls>=1.3,<2",
+    "sqlfluff>=4.3,<5",
 ]
 
 [project.optional-dependencies]
-dbt = ["sqlfluff-templater-dbt>=4.0,<5"]
-fast = ["sqlfluff[rs]>=4.0,<5"]
+dbt = ["sqlfluff-templater-dbt>=4.3,<5"]
+fast = ["sqlfluff[rs]>=4.3,<5"]
+
+[dependency-groups]
+test = [
+    "dbt-duckdb",
+    "pyhamcrest",
+    "pytest",
+    "pytest-asyncio",
+    "python-jsonrpc-server",
+]
+lint = [
+    "black",
+    "isort",
+    "pylint",
+]
 
 [project.scripts]
 sqlfluff-lsp = "sqlfluff_lsp.cli:main"
