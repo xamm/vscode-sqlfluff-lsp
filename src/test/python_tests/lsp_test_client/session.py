@@ -47,15 +47,21 @@ class LspSession(MethodDispatcher):
 
         shell=True needed for pytest-cov to work in subprocess.
         """
-        # pylint: disable=consider-using-with
+        environment = os.environ.copy()
+        project_path = os.fspath(PROJECT_ROOT)
+        environment["PYTHONPATH"] = os.pathsep.join(
+            value
+            for value in (project_path, environment.get("PYTHONPATH", ""))
+            if value
+        )
         self._sub = subprocess.Popen(
             [sys.executable, str(self.script)],
             stdout=subprocess.PIPE,
             stdin=subprocess.PIPE,
             bufsize=0,
             cwd=self.cwd,
-            env=os.environ,
-            shell="WITH_COVERAGE" in os.environ,
+            env=environment,
+            shell="WITH_COVERAGE" in environment,
         )
 
         self._writer = JsonRpcStreamWriter(os.fdopen(self._sub.stdin.fileno(), "wb"))

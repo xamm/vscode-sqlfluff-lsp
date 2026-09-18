@@ -23,3 +23,5 @@ noxfile.py
 **/requirements.txt
 **/requirements.in
 **/tool/_debug_server.py
+!sqlfluff_lsp/**
+!pyproject.toml

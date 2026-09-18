@@ -1,159 +1,217 @@
-# SQLFluff Extension for VS Code
+# SQLFluff Extension and Agent Servers
 
-A VS Code extension for SQLFluff, a SQL linter and formatter. SQLFluff is a popular, dialect-aware SQL linter and formatter that helps you write clean, consistent SQL code.
-
-This extension fully relies on the [SQLFLuff](https://github.com/sqlfluff/sqlfluff) linter and formatter. It simply provides very barebones integration into VS Code via the Language Server Protocol (LSP).
+A VS Code extension for SQLFluff, plus a persistent Python language server and
+MCP server for editors and coding agents. SQLFluff remains the linter and
+formatter; this project provides the protocol frontends and keeps one engine
+alive so dbt projects do not reload their manifest for every request.
 
 ## Features
 
-- **SQL Linting**: Checks your SQL code for syntax errors, style issues, and best practices
-- **SQL Formatting**: Automatically formats your SQL code using `sqlfluff fix` which respects your project configuration
-- **Multiple SQL Dialects**: Supports various SQL dialects like PostgreSQL, MySQL, BigQuery, Snowflake and more
-- **Format on Save**: Optional ability to format your SQL code whenever you save
-- **Configurable Rules**: Enable or disable specific linting rules to match your team's coding standards via `.sqlfluff` or `pyproject.toml` files
+- **SQL linting** with dialect-aware diagnostics
+- **SQL formatting** through source-preserving SQLFluff fixes
+- **dbt templating** for saved files and unsaved editor buffers
+- **Persistent engine** shared by the LSP and MCP frontends
+- **MCP tools** for agent-oriented lint, dry-run fix, applied fix, and reload
+- **Configurable rules** from `.sqlfluff` or `pyproject.toml`
 
 ## Requirements
 
-- Python 3.8 or above
-- VS Code 1.64.0 or above
+- Python 3.10 or above
+- VS Code 1.78.0 or above for the extension
 - Python extension for VS Code
 
 ## Extension Settings
 
-This extension contributes the following settings:
+The extension contributes these settings:
 
-* `sqlfluff.args`: Additional arguments passed to SQLFluff
-* `sqlfluff.path`: Path to SQLFluff binary if not using the bundled version
-* `sqlfluff.importStrategy`: Controls where SQLFluff is imported from ("useBundled" or "fromEnvironment")
-* `sqlfluff.interpreter`: Python interpreter to use for SQLFluff
-* `sqlfluff.showNotifications`: Controls when notifications are shown
-* `sqlfluff.diagnosticSeverity`: Controls the severity level of SQLFluff diagnostics (error, warning, information, hint)
-* `sqlfluff.dialect`: Specifies which SQL dialect to use for linting and formatting
-* `sqlfluff.templater`: Defines which templater to use for processing SQL files
+* `sqlfluff.importStrategy`: Controls whether bundled or environment Python
+  dependencies are preferred (`useBundled` or `fromEnvironment`)
+* `sqlfluff.interpreter`: Python interpreter to use for the server
+* `sqlfluff.showNotifications`: Controls when server notifications are shown
+* `sqlfluff.diagnosticSeverity`: Severity for SQLFluff diagnostics (`error`,
+  `warning`, `information`, or `hint`)
+* `sqlfluff.dialect`: Optional dialect override
+* `sqlfluff.templater`: Optional templater override
 
-> **Note:** While SQLFluff configurations are typically defined in `.sqlfluff` or `pyproject.toml` files, the VS Code settings above will override those configurations if set. This allows you to customize SQLFluff behavior specifically within VS Code without changing your project-level configurations.
+The old `sqlfluff.args` and `sqlfluff.path` settings are removed. The engine
+uses SQLFluff's Python API directly, so per-request CLI arguments and binary
+paths cannot be applied.
 
-## SQLFluff Commands
-
-The extension provides the following commands (accessible via Command Palette):
-
-* **SQLFluff: Restart Server** (`sqlfluff.restart`): Restarts the language server
+Project configuration remains the default. VS Code settings for dialect and
+templater override the project configuration when explicitly set.
 
 ## Configuration
 
-SQLFluff can be configured using a `.sqlfluff` configuration file or `pyproject.toml` file in your project root. The extension will respect these project-level configurations when linting and formatting SQL files.
-
-Example `.sqlfluff` configuration:
+SQLFluff loads `.sqlfluff` or `pyproject.toml` from the project root. Example:
 
 ```ini
 [sqlfluff]
 dialect = snowflake
 templater = jinja
+encoding = utf-8
 exclude_rules = L016
 
-[sqlfluff:indentation]
-indented_joins = True
-indented_using_on = True
-
-[sqlfluff:layout:type:comma]
-line_position = trailing
-
-[sqlfluff:rules]
-allow_scalar = True
-unquoted_identifiers_policy = all
-
-[sqlfluff:rules:capitalisation.keywords]  # CP01, formerly L010
-capitalisation_policy = upper
-
-[sqlfluff:rules:capitalisation.functions]  # CP03, formerly L030
+[sqlfluff:rules:capitalisation.keywords]
 capitalisation_policy = upper
 ```
 
-Example `pyproject.toml` configuration:
+For detailed options, see the [SQLFluff documentation](https://docs.sqlfluff.com/en/stable/configuration.html).
 
-```toml
-[tool.sqlfluff]
-dialect = "snowflake"
-templater = "jinja"
-exclude_rules = ["L016"]
+## Standalone LSP
 
-[tool.sqlfluff.indentation]
-indented_joins = true
-indented_using_on = true
+Install the persistent server from a checkout or a package source:
 
-[tool.sqlfluff.layout.type.comma]
-line_position = "trailing"
-
-[tool.sqlfluff.rules]
-allow_scalar = true
-unquoted_identifiers_policy = "all"
-
-[tool.sqlfluff.rules.capitalisation.keywords]  # CP01, formerly L010
-capitalisation_policy = "upper"
-
-[tool.sqlfluff.rules.capitalisation.functions]  # CP03, formerly L030
-capitalisation_policy = "upper"
+```bash
+uv tool install '.[dbt]'
+# Add the adapter used by the project, for example:
+uv tool install '.[dbt]' --with dbt-snowflake
 ```
 
-For detailed configuration options, see [SQLFluff documentation](https://docs.sqlfluff.com/en/stable/configuration.html).
+The command is `sqlfluff-lsp`. It speaks LSP over stdio and accepts optional
+`--dialect` and `--templater` overrides. A standalone client can launch it with
+the project directory as its working directory.
+
+OMP configuration (`~/.omp/agent/lsp.json`):
+
+```json
+{
+  "servers": {
+    "sqlfluff-lsp": {
+      "command": "sqlfluff-lsp",
+      "fileTypes": [".sql"],
+      "rootMarkers": [".sqlfluff", "dbt_project.yml", ".git"],
+      "isLinter": true
+    }
+  }
+}
+```
+
+Helix and Neovim can use the same command in their language-server
+configuration. The server supports full-document synchronization, diagnostics,
+formatting, and a debounced `didChange` path. Code actions are not included in
+v1.
+
+## MCP for Agents
+
+Install the MCP entrypoint with the same project extras:
+
+```bash
+uv tool install '.[dbt]' --with dbt-duckdb
+```
+
+The repository includes a root `.mcp.json` configuration for Claude Code and
+OMP-compatible MCP discovery:
+
+```json
+{
+  "mcpServers": {
+    "sqlfluff": {
+      "command": "sqlfluff-mcp",
+      "args": []
+    }
+  }
+}
+```
+
+The `sqlfluff` server exposes:
+
+- `lint(paths)`: returns JSON violations and a summary
+- `fix(paths, apply=false)`: returns unified diffs without changing files
+- `fix(paths, apply=true)`: writes source-preserving fixes
+- `reload()`: drops cached configuration and the dbt manifest
+
+The first operation in a dbt project compiles the project and can take seconds.
+Later operations reuse the in-process manifest and are substantially faster.
+Violation lines and columns are 1-based source positions.
+
+## dbt Setup
+
+Install `sqlfluff-templater-dbt` through the `dbt` extra and install the adapter
+used by the project. Configure the same project and profiles directories that
+dbt uses:
+
+```ini
+[sqlfluff]
+dialect = snowflake
+templater = dbt
+encoding = utf-8
+
+[sqlfluff:templater:dbt]
+project_dir = .
+profiles_dir = .
+```
+
+Set `profiles_dir` to the real profile location when it is outside the project.
+Keep generated targets and packages in `.sqlfluffignore`, for example:
+
+```text
+target/
+dbt_packages/
+macros/
+```
+
+The engine passes each in-memory buffer to SQLFluff with its real file path,
+which is required for dbt's `ref`, `var`, manifest, and source-position
+semantics.
+
+## Speed and Cache Behavior
+
+The engine creates one `sqlfluff.core.Linter` per project process. SQLFluff's
+dbt templater therefore caches its manifest, compiler, and adapter state across
+requests. All lint and fix work is serialized because dbt templating mutates
+shared Jinja state. Install the optional Rust parser when a compatible wheel is
+available:
+
+```bash
+uv tool install '.[dbt,fast]' --with dbt-snowflake
+```
+
+When the Rust parser package is present, the engine selects
+`use_rust_parser = auto` and silently falls back to the Python parser when it is
+unavailable.
+
+## Manifest Staleness and Troubleshooting
+
+The dbt manifest is cached for the lifetime of a server. After changing macros,
+models, or project configuration, reload the process or use:
+
+- VS Code: `SQLFluff: Restart Server`
+- OMP LSP: `lsp reload *`
+- MCP: call `reload`
+
+If the server reports no dialect, configure `dialect` in project config or use
+the standalone `--dialect` option. If an installed command is not on `PATH`,
+replace it in the client configuration with its absolute uv-tool path.
 
 ## Supported SQL Dialects
 
-- ANSI (default)
-- BigQuery
-- ClickHouse
-- Databricks
-- DB2
-- DuckDB
-- Hive
-- MySQL
-- Oracle
-- PostgreSQL
-- Redshift
-- Snowflake
-- SparkSQL
-- SQLite
-- Teradata
-- TSQL (SQL Server)
+ANSI, BigQuery, ClickHouse, Databricks, DB2, DuckDB, Hive, MySQL, Oracle,
+PostgreSQL, Redshift, Snowflake, SparkSQL, SQLite, Teradata, and TSQL.
 
 ## Quick Start
 
-1. Install the extension
-2. Open a SQL file (`.sql` extension)
-3. Errors and warnings will be highlighted automatically
-4. Format document with `Format Document` command (Shift+Alt+F) or on save if enabled
-
-## Troubleshooting
-
-- **SQLFluff Not Found**: Make sure Python is installed and available in your path
-- **No Linting Results**: Check if you have the correct dialect selected for your SQL
-- **Formatting Issues**: Try using the dedicated "SQLFluff: Format SQL" command which uses `sqlfluff fix` internally
-- **Configuration Not Applied**: Ensure your `.sqlfluff` or `pyproject.toml` file is correctly formatted and in the project root
-- **Performance Issues**: For large files, consider excluding some rules in your configuration
-
-## Release Notes
-
-### 1.0.0
-
-Initial release of SQLFluff extension for VS Code
-
----
+1. Install the extension or the standalone server.
+2. Open a SQL file or configure an agent client.
+3. Configure the dialect and templater in project configuration.
+4. Review diagnostics or call the MCP `lint` tool.
+5. Format with `Format Document` or call MCP `fix` in dry-run mode first.
 
 ## Development
 
-### Building the Extension
+Build the extension:
 
 ```bash
 npm install
-npm run package
+npm run compile
 ```
 
-### Running Tests
+Run the Python fixture suite with dbt and the DuckDB adapter:
 
 ```bash
-npm test
+uv run --extra dbt --with dbt-duckdb --with pytest --with pytest-asyncio \
+  --with pyhamcrest --with python-jsonrpc-server pytest src/test/python_tests -v
 ```
 
 ## License
 
-This extension is licensed under the MIT License.
+This extension and its server integrations are licensed under the MIT License.

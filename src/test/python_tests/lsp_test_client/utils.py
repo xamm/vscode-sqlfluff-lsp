@@ -3,6 +3,7 @@
 """
 Utility functions for use with tests.
 """
+
 import json
 import os
 import pathlib
@@ -64,8 +65,8 @@ def get_initialization_options():
     setting = {}
     for prop in properties:
         name = prop[len(server_id) + 1 :]
-        value = properties[prop]["default"]
-        setting[name] = value
+        if "default" in properties[prop]:
+            setting[name] = properties[prop]["default"]
 
     setting["workspace"] = as_uri(str(PROJECT_ROOT))
     setting["interpreter"] = []

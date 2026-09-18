@@ -9,4 +9,9 @@ node_modules
 bundled/libs/
 **/__pycache__
 **/.pytest_cache
+build/
+*.egg-info/
+dbt_packages/
+src/test/python_tests/test_data/dbt_project/target/
+src/test/python_tests/test_data/dbt_project/logs/
 **/.vs
