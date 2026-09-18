@@ -31,11 +31,19 @@ def _check_files(names: List[str]) -> None:
         file_path = root_dir / name
         lines: List[str] = file_path.read_text().splitlines()
         if any(line for line in lines if line.startswith("# TODO:")):
-            raise Exception(f"Please update {os.fspath(file_path)}.")
+            raise Exception(  # pylint: disable=broad-exception-raised
+                f"Please update {os.fspath(file_path)}."
+            )
 
 
 def _update_pip_packages(session: nox.Session) -> None:
-    session.run("pip-compile", "--generate-hashes", "--resolver=backtracking", "--upgrade", "./requirements.in")
+    session.run(
+        "pip-compile",
+        "--generate-hashes",
+        "--resolver=backtracking",
+        "--upgrade",
+        "./requirements.in",
+    )
     session.run(
         "pip-compile",
         "--generate-hashes",
@@ -105,6 +113,7 @@ def setup(session: nox.Session) -> None:
 def tests(session: nox.Session) -> None:
     """Runs all the tests for the extension."""
     session.install("-r", "src/test/python_tests/requirements.txt")
+    session.install("-e", ".", "--no-deps")
     session.run("pytest", "src/test/python_tests")
 
 
@@ -113,7 +122,7 @@ def lint(session: nox.Session) -> None:
     """Runs linter and formatter checks on python files."""
     session.install("-r", "./requirements.txt")
     session.install("-r", "src/test/python_tests/requirements.txt")
-
+    session.install("-e", ".", "--no-deps")
     session.install("pylint")
     session.run("pylint", "-d", "W0511", "./bundled/tool")
     session.run(
@@ -128,14 +137,16 @@ def lint(session: nox.Session) -> None:
     # check formatting using black
     session.install("black")
     session.run("black", "--check", "./bundled/tool")
+    session.run("black", "--check", "./sqlfluff_lsp")
     session.run("black", "--check", "./src/test/python_tests")
     session.run("black", "--check", "noxfile.py")
 
     # check import sorting using isort
     session.install("isort")
-    session.run("isort", "--check", "./bundled/tool")
-    session.run("isort", "--check", "./src/test/python_tests")
-    session.run("isort", "--check", "noxfile.py")
+    session.run("isort", "--profile", "black", "--check", "./bundled/tool")
+    session.run("isort", "--profile", "black", "--check", "./sqlfluff_lsp")
+    session.run("isort", "--profile", "black", "--check", "./src/test/python_tests")
+    session.run("isort", "--profile", "black", "--check", "noxfile.py")
 
     # check typescript code
     session.run("npm", "run", "lint", external=True)
