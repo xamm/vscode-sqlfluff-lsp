@@ -8,7 +8,7 @@
 # run the above commands manually.
 
 # Required packages
-pygls>=1.3,<2
+pygls>=1.3,<3
 packaging
 sqlfluff>=4.3,<5
 sqlfluff-templater-dbt>=4.3,<5
