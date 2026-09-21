@@ -234,6 +234,21 @@ npm update --lockfile-version=2
 
 The same safe sequence is available through `uvx nox -s update_packages`. Major upgrades require deliberate constraint and compatibility changes in `pyproject.toml` or `package.json`.
 
+TypeScript is held at 6.0.3: `@typescript-eslint/parser` currently peer-requires
+`typescript <6.1.0`, so TypeScript 7 cannot be installed alongside it. Changing or
+removing ESLint does not lift this ceiling — the parser itself comes from
+`@typescript-eslint/parser`. To re-check whether TypeScript 7 is available:
+
+```bash
+npm view @typescript-eslint/parser@latest peerDependencies
+```
+
+When that range includes `7.x`, bump `typescript` to `^7.0.2` together with
+`@typescript-eslint/parser` and `@typescript-eslint/eslint-plugin` in one change,
+then run the full verification above — the webpack compile path (`ts-loader`) is
+untested against the TypeScript 7 native compiler and must be confirmed with
+`npm run compile` before merge.
+
 ## License
 
 This extension and its server integrations are licensed under the MIT License.
