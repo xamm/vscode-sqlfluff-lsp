@@ -10,7 +10,8 @@ import traceback
 from typing import Any
 
 from lsprotocol import types as lsp
-from pygls import server, uris, workspace
+from pygls import uris, workspace
+from pygls.lsp.server import LanguageServer
 
 from . import __version__
 from .engine import Engine, EngineError
@@ -18,7 +19,7 @@ from .engine import Engine, EngineError
 LOGGER = logging.getLogger(__name__)
 
 MAX_WORKERS = 5
-LSP_SERVER = server.LanguageServer(
+LSP_SERVER = LanguageServer(
     name="sqlfluff",
     version=__version__,
     max_workers=MAX_WORKERS,
@@ -34,28 +35,34 @@ def log_to_output(
     message: str, msg_type: lsp.MessageType = lsp.MessageType.Log
 ) -> None:
     """Send a message to the connected LSP client."""
-    LSP_SERVER.show_message_log(message, msg_type)
+    LSP_SERVER.window_log_message(lsp.LogMessageParams(type=msg_type, message=message))
 
 
 def log_error(message: str) -> None:
     """Log an error and optionally show it as a client notification."""
     log_to_output(message, lsp.MessageType.Error)
     if os.getenv("LS_SHOW_NOTIFICATION", "off") in {"onError", "onWarning", "always"}:
-        LSP_SERVER.show_message(message, lsp.MessageType.Error)
+        LSP_SERVER.window_show_message(
+            lsp.ShowMessageParams(type=lsp.MessageType.Error, message=message)
+        )
 
 
 def log_warning(message: str) -> None:
     """Log a warning and optionally show it as a client notification."""
     log_to_output(message, lsp.MessageType.Warning)
     if os.getenv("LS_SHOW_NOTIFICATION", "off") in {"onWarning", "always"}:
-        LSP_SERVER.show_message(message, lsp.MessageType.Warning)
+        LSP_SERVER.window_show_message(
+            lsp.ShowMessageParams(type=lsp.MessageType.Warning, message=message)
+        )
 
 
 def log_always(message: str) -> None:
     """Log an informational message and optionally notify the client."""
     log_to_output(message, lsp.MessageType.Info)
     if os.getenv("LS_SHOW_NOTIFICATION", "off") == "always":
-        LSP_SERVER.show_message(message, lsp.MessageType.Info)
+        LSP_SERVER.window_show_message(
+            lsp.ShowMessageParams(type=lsp.MessageType.Info, message=message)
+        )
 
 
 def _get_severity(severity: str) -> lsp.DiagnosticSeverity:
@@ -82,7 +89,7 @@ def _get_line_endings(lines: list[str]) -> str | None:
         return None
 
 
-def _match_line_endings(document: workspace.Document, text: str) -> str:
+def _match_line_endings(document: workspace.TextDocument, text: str) -> str:
     """Ensure formatted output keeps the document's line-ending style."""
     expected = _get_line_endings(document.source.splitlines(keepends=True))
     actual = _get_line_endings(text.splitlines(keepends=True))
@@ -114,7 +121,7 @@ def _settings_from_initialization(options: Any) -> tuple[dict[str, Any], str | N
     return direct, direct.get("cwd")
 
 
-def _path_for_document(document: workspace.Document) -> pathlib.Path:
+def _path_for_document(document: workspace.TextDocument) -> pathlib.Path:
     """Convert a managed document URI to a filesystem path."""
     path = uris.to_fs_path(document.uri)
     if path is None:
@@ -122,7 +129,7 @@ def _path_for_document(document: workspace.Document) -> pathlib.Path:
     return pathlib.Path(path)
 
 
-def _lint_document(document: workspace.Document) -> list[lsp.Diagnostic]:
+def _lint_document(document: workspace.TextDocument) -> list[lsp.Diagnostic]:
     """Lint one managed document and convert source positions to LSP positions."""
     if ENGINE is None:
         return []
@@ -159,13 +166,15 @@ def _publish_for_uri(uri: str) -> None:
     """Lint the current document and publish diagnostics."""
     try:
         document = LSP_SERVER.workspace.get_text_document(uri)
-        LSP_SERVER.publish_diagnostics(uri, _lint_document(document))
+        LSP_SERVER.text_document_publish_diagnostics(
+            lsp.PublishDiagnosticsParams(uri=uri, diagnostics=_lint_document(document))
+        )
     except Exception:  # noqa: BLE001 - keep LSP alive after notification errors
         log_error(traceback.format_exc(chain=True))
 
 
 def _schedule_lint(uri: str) -> None:
-    """Debounce a document-change lint request."""
+    """Debounce linting after a document change."""
     delay = max(float(os.getenv("SQLFLUFF_DEBOUNCE_MS", "300")) / 1000, 0)
     with DEBOUNCE_LOCK:
         previous = DEBOUNCE_TIMERS.pop(uri, None)
@@ -206,7 +215,9 @@ def did_change(params: lsp.DidChangeTextDocumentParams) -> None:
 def did_close(params: lsp.DidCloseTextDocumentParams) -> None:
     """Clear diagnostics and cancel pending work on close."""
     _clear_timer(params.text_document.uri)
-    LSP_SERVER.publish_diagnostics(params.text_document.uri, [])
+    LSP_SERVER.text_document_publish_diagnostics(
+        lsp.PublishDiagnosticsParams(uri=params.text_document.uri, diagnostics=[])
+    )
 
 
 @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_FORMATTING)
@@ -255,7 +266,9 @@ def initialize(params: lsp.InitializeParams) -> None:
         log_to_output(f"SQLFluff engine initialized at {ENGINE.root}")
     except EngineError as error:
         ENGINE = None
-        LSP_SERVER.show_message(str(error), lsp.MessageType.Error)
+        LSP_SERVER.window_show_message(
+            lsp.ShowMessageParams(type=lsp.MessageType.Error, message=str(error))
+        )
     except Exception:  # noqa: BLE001 - report initialization failures
         ENGINE = None
         log_error(traceback.format_exc(chain=True))
@@ -264,7 +277,6 @@ def initialize(params: lsp.InitializeParams) -> None:
 def main(overrides: dict[str, str] | None = None) -> None:
     """Start the language server over stdio."""
     if overrides:
-        # CLI overrides are consumed by initialize through this process-local map.
         _CLI_OVERRIDES.clear()
         _CLI_OVERRIDES.update(overrides)
     LSP_SERVER.start_io()
@@ -272,12 +284,11 @@ def main(overrides: dict[str, str] | None = None) -> None:
 
 _CLI_OVERRIDES: dict[str, str] = {}
 
-
 __all__ = ["ENGINE", "LSP_SERVER", "main"]
 
 
 def _cleanup() -> None:
-    """Cancel timers and release the cached SQLFluff engine."""
+    """Cancel pending debounce timers and release the cached engine."""
     global ENGINE
     with DEBOUNCE_LOCK:
         timers = list(DEBOUNCE_TIMERS.values())

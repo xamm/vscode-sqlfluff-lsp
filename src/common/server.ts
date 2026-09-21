@@ -3,12 +3,12 @@
 
 import * as fsapi from 'fs-extra';
 import { Disposable, env, LogOutputChannel } from 'vscode';
-import { State } from 'vscode-languageclient';
 import {
     LanguageClient,
     LanguageClientOptions,
     RevealOutputChannelOn,
     ServerOptions,
+    State,
 } from 'vscode-languageclient/node';
 import { DEBUG_SERVER_SCRIPT_PATH, SERVER_SCRIPT_PATH } from './constants';
 import { traceError, traceInfo, traceVerbose } from './log/logging';

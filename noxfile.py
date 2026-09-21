@@ -2,11 +2,9 @@
 # Licensed under the MIT License.
 """All the action we need during build"""
 
-import json
 import os
 import pathlib
 import tempfile
-import urllib.request as url_lib
 from typing import List
 
 import nox  # pylint: disable=import-error
@@ -73,50 +71,6 @@ def _check_files(names: List[str]) -> None:
             )
 
 
-def _get_package_data(package):
-    json_uri = f"https://registry.npmjs.org/{package}"
-    with url_lib.urlopen(json_uri) as response:
-        return json.loads(response.read())
-
-
-def _update_npm_packages(session: nox.Session) -> None:
-    pinned = {
-        "vscode-languageclient",
-        "@types/vscode",
-        "@types/node",
-    }
-    package_json_path = pathlib.Path(__file__).parent / "package.json"
-    package_json = json.loads(package_json_path.read_text(encoding="utf-8"))
-
-    for package in package_json["dependencies"]:
-        if package not in pinned:
-            data = _get_package_data(package)
-            latest = "^" + data["dist-tags"]["latest"]
-            package_json["dependencies"][package] = latest
-
-    for package in package_json["devDependencies"]:
-        if package not in pinned:
-            data = _get_package_data(package)
-            latest = "^" + data["dist-tags"]["latest"]
-            package_json["devDependencies"][package] = latest
-
-    # Ensure engine matches the package
-    if (
-        package_json["engines"]["vscode"]
-        != package_json["devDependencies"]["@types/vscode"]
-    ):
-        print(
-            "Please check VS Code engine version and @types/vscode version in package.json."
-        )
-
-    new_package_json = json.dumps(package_json, indent=4)
-    # JSON dumps uses \n for line ending on all platforms by default
-    if not new_package_json.endswith("\n"):
-        new_package_json += "\n"
-    package_json_path.write_text(new_package_json, encoding="utf-8")
-    session.run("npm", "install", external=True)
-
-
 @nox.session(venv_backend="none")
 def setup(session: nox.Session) -> None:
     """Sets up the template for development."""
@@ -171,6 +125,6 @@ def build_package(session: nox.Session) -> None:
 
 @nox.session(venv_backend="none")
 def update_packages(session: nox.Session) -> None:
-    """Update locked Python and npm packages."""
+    """Update Python and npm dependencies within declared version ranges."""
     session.run("uv", "lock", "--upgrade", external=True)
-    _update_npm_packages(session)
+    session.run("npm", "update", "--lockfile-version=2", external=True)
