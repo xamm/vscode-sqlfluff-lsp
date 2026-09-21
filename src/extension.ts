@@ -86,7 +86,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         }),
         registerCommand(`${serverId}.restart`, async () => {
             await runServer();
-        })
+        }),
     );
 
     setImmediate(async () => {

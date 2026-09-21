@@ -19,13 +19,10 @@ suite('SQLFluff dbt extension host', () => {
 
         assert.ok(diagnostics.length > 0);
         assert.ok(diagnostics.every((diagnostic) => diagnostic.source === 'sqlfluff'));
-        assert.ok(
-            diagnostics.some((diagnostic) => new Set(['LT01', 'LT09']).has(String(diagnostic.code))),
-        );
+        assert.ok(diagnostics.some((diagnostic) => new Set(['LT01', 'LT09']).has(String(diagnostic.code))));
         assert.ok(
             diagnostics.every(
-                (diagnostic) =>
-                    diagnostic.range.start.line >= 0 && diagnostic.range.start.character >= 0,
+                (diagnostic) => diagnostic.range.start.line >= 0 && diagnostic.range.start.character >= 0,
             ),
         );
     });
@@ -42,10 +39,7 @@ suite('SQLFluff dbt extension host', () => {
         assert.ok(edits.length > 0);
         const document = await vscode.workspace.openTextDocument(MODEL_URI);
         const formattedText = [...edits]
-            .sort(
-                (left, right) =>
-                    document.offsetAt(right.range.start) - document.offsetAt(left.range.start),
-            )
+            .sort((left, right) => document.offsetAt(right.range.start) - document.offsetAt(left.range.start))
             .reduce((text, edit) => {
                 const start = document.offsetAt(edit.range.start);
                 const end = document.offsetAt(edit.range.end);

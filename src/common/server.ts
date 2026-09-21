@@ -61,9 +61,7 @@ async function createServer(
     const clientOptions: LanguageClientOptions = {
         // Register the server for Python and supported SQL dialects
         documentSelector: isVirtualWorkspace()
-            ? [
-                  { language: 'python' }
-              ]
+            ? [{ language: 'python' }]
             : [
                   // Python documents
                   { scheme: 'file', language: 'python' },
