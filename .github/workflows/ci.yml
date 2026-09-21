@@ -1,0 +1,127 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up mise
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install: true
+          cache: true
+
+      - name: Cache uv packages
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('**/uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-
+
+      - name: Install Node.js dependencies
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22.x'
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          uv sync --locked --extra dbt --group test --group lint
+
+      - name: Verify lockfile
+        run: uv lock --check
+
+      - name: Run Python and TypeScript lint
+        run: uvx nox -P 3.14 -s lint
+
+      - name: Check workflow formatting
+        run: npx prettier --check '.github/**/*.yml'
+      - name: Prune uv cache
+        if: always()
+        run: uv cache prune --ci
+
+  python-tests:
+    name: Python tests (Python 3.10 and 3.14)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up mise
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install: true
+          cache: true
+
+      - name: Cache uv packages
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('**/uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-
+
+      - name: Run Python tests
+        run: uvx nox -s tests
+
+      - name: Prune uv cache
+        if: always()
+        run: uv cache prune --ci
+
+  extension-tests:
+    name: VS Code extension tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up mise
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install: true
+          cache: true
+
+      - name: Cache uv packages
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('**/uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22.x'
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          uv sync --locked --extra dbt --group test
+
+      - name: Run VS Code extension tests
+        run: xvfb-run -a npm test
+
+      - name: Prune uv cache
+        if: always()
+        run: uv cache prune --ci
