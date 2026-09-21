@@ -31,11 +31,7 @@ export async function initializePython(disposables: Disposable[]): Promise<void>
                 api.environments.onDidChangeActiveEnvironmentPath((e) => {
                     onDidChangePythonInterpreterEvent.fire({
                         path: [e.path],
-                        resource: e.resource
-                            ? 'uri' in e.resource
-                                ? e.resource.uri
-                                : e.resource
-                            : undefined,
+                        resource: e.resource ? ('uri' in e.resource ? e.resource.uri : e.resource) : undefined,
                     });
                 }),
             );

@@ -98,8 +98,8 @@ export async function getGlobalSettings(namespace: string, includeInterpreter?: 
         importStrategy: getGlobalValue<string>(config, 'importStrategy', 'useBundled'),
         showNotifications: getGlobalValue<string>(config, 'showNotifications', 'off'),
         diagnosticSeverity: getGlobalValue<string>(config, 'diagnosticSeverity', 'warning'),
-        dialect: getGlobalValue<string>(config, 'dialect', ""),
-        templater: getGlobalValue<string>(config, 'templater', ""),
+        dialect: getGlobalValue<string>(config, 'dialect', ''),
+        templater: getGlobalValue<string>(config, 'templater', ''),
     };
     return setting;
 }

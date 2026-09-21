@@ -54,7 +54,7 @@ jobs:
         run: uvx nox -P 3.14 -s lint
 
       - name: Check workflow formatting
-        run: npx prettier --check '.github/**/*.yml'
+        run: npx oxfmt --check '.github/**/*.yml'
       - name: Prune uv cache
         if: always()
         run: uv cache prune --ci

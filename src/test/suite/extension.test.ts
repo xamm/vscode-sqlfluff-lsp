@@ -24,13 +24,10 @@ suite('SQLFluff extension host', () => {
         const diagnostics = await waitForDiagnostics(QUERY_URI, 30_000);
         assert.ok(diagnostics.length > 0);
         assert.ok(diagnostics.every((diagnostic) => diagnostic.source === 'sqlfluff'));
-        assert.ok(
-            diagnostics.some((diagnostic) => new Set(['LT01', 'LT09']).has(String(diagnostic.code))),
-        );
+        assert.ok(diagnostics.some((diagnostic) => new Set(['LT01', 'LT09']).has(String(diagnostic.code))));
         assert.ok(
             diagnostics.every(
-                (diagnostic) =>
-                    diagnostic.range.start.line >= 0 && diagnostic.range.start.character >= 0,
+                (diagnostic) => diagnostic.range.start.line >= 0 && diagnostic.range.start.character >= 0,
             ),
         );
     });
@@ -46,10 +43,7 @@ suite('SQLFluff extension host', () => {
         assert.ok(edits);
         assert.ok(edits.length > 0);
         const formattedText = [...edits]
-            .sort(
-                (left, right) =>
-                    document.offsetAt(right.range.start) - document.offsetAt(left.range.start),
-            )
+            .sort((left, right) => document.offsetAt(right.range.start) - document.offsetAt(left.range.start))
             .reduce((text, edit) => {
                 const start = document.offsetAt(edit.range.start);
                 const end = document.offsetAt(edit.range.end);
@@ -67,20 +61,12 @@ suite('SQLFluff extension host', () => {
         await restartAndAwaitRepublish(QUERY_URI, 45_000);
 
         const formattedEdit = new vscode.WorkspaceEdit();
-        formattedEdit.replace(
-            QUERY_URI,
-            new vscode.Range(0, 0, document.lineCount, 0),
-            FORMATTED,
-        );
+        formattedEdit.replace(QUERY_URI, new vscode.Range(0, 0, document.lineCount, 0), FORMATTED);
         assert.ok(await vscode.workspace.applyEdit(formattedEdit));
         await waitForDiagnostics(QUERY_URI, 30_000, (diagnostics) => diagnostics.length === 0);
 
         const originalEdit = new vscode.WorkspaceEdit();
-        originalEdit.replace(
-            QUERY_URI,
-            new vscode.Range(0, 0, document.lineCount, 0),
-            ORIGINAL,
-        );
+        originalEdit.replace(QUERY_URI, new vscode.Range(0, 0, document.lineCount, 0), ORIGINAL);
         assert.ok(await vscode.workspace.applyEdit(originalEdit));
         await waitForDiagnostics(QUERY_URI, 30_000);
     });

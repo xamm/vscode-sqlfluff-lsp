@@ -8,7 +8,8 @@ src/**
 webpack.config.js
 vsc-extension-quickstart.md
 **/tsconfig.json
-**/eslint.config.js
+**/.oxlintrc.json
+**/.oxfmtrc.json
 **/*.ts
 .venv/**
 .nox/**

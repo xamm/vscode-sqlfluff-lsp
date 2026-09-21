@@ -16,7 +16,7 @@
     "python.testing.cwd": "${workspaceFolder}",
     "python.analysis.extraPaths": ["bundled/libs"],
     "[typescript]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.defaultFormatter": "oxc.oxc-vscode",
         "editor.formatOnSave": true
     },
 }
