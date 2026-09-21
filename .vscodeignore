@@ -8,13 +8,11 @@ src/**
 webpack.config.js
 vsc-extension-quickstart.md
 **/tsconfig.json
-**/.eslintrc.json
+**/eslint.config.js
 **/*.ts
 .venv/**
 .nox/**
 .github/
-**/__pycache__/**
-**/*.pyc
 bundled/libs/bin/**
 bundled/libs/*.dist-info/**
 noxfile.py
@@ -23,5 +21,9 @@ noxfile.py
 uv.lock
 .mise.toml
 **/tool/_debug_server.py
-!sqlfluff_lsp/**
 !pyproject.toml
+!sqlfluff_lsp/**/*.py
+.claude/**
+**/__pycache__/**
+**/*.pyc
+**/*.egg-info/**

@@ -17,7 +17,7 @@ alive so dbt projects do not reload their manifest for every request.
 ## Requirements
 
 - Python 3.10 or above
-- VS Code 1.78.0 or above for the extension
+- VS Code 1.138.0 or above for the extension
 - Python extension for VS Code
 
 ## Extension Settings
@@ -225,11 +225,14 @@ uvx nox -s tests     # runs on Python 3.10 and 3.14
 uvx nox -P 3.14 -s lint
 ```
 
-Upgrade locked dependencies:
+Upgrade dependencies within their declared version ranges:
 
 ```bash
-uvx nox -s update_packages
+uv lock --upgrade
+npm update --lockfile-version=2
 ```
+
+The same safe sequence is available through `uvx nox -s update_packages`. Major upgrades require deliberate constraint and compatibility changes in `pyproject.toml` or `package.json`.
 
 ## License
 
