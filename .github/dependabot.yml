@@ -7,11 +7,14 @@ updates:
     labels:
       - 'no-changelog'
     cooldown:
-      default-days: 14
+      default-days: 7
     groups:
-      github-actions:
+      non-major-actions:
         patterns:
           - '*'
+        update-types:
+          - 'minor'
+          - 'patch'
 
   - package-ecosystem: 'uv'
     directory: /
@@ -20,8 +23,10 @@ updates:
     labels:
       - 'no-changelog'
     cooldown:
-      default-days: 14
+      semver-patch-days: 3
+      semver-minor-days: 7
       semver-major-days: 30
+    versioning-strategy: increase-if-necessary
     groups:
       python-minor-patch:
         patterns:
@@ -42,7 +47,7 @@ updates:
     labels:
       - 'no-changelog'
     cooldown:
-      default-days: 14
+      default-days: 7
       semver-major-days: 30
     groups:
       npm-minor-patch:
@@ -59,4 +64,5 @@ updates:
     ignore:
       - dependency-name: '@types/vscode'
       - dependency-name: '@types/node'
-      - dependency-name: 'vscode-languageclient'
+        update-types:
+          - 'version-update:semver-major'
