@@ -48,7 +48,7 @@ class Engine:
     prevents concurrent LSP requests from corrupting that shared state.
     """
 
-    def __init__(self, root: Path, overrides: dict[str, str] | None = None):
+    def __init__(self, root: Path, overrides: dict[str, Any] | None = None):
         self.root = Path(root).expanduser().resolve()
         self.overrides = dict(overrides or {})
         self._lock = threading.RLock()
@@ -98,6 +98,23 @@ class Engine:
             fixable=bool(error.fixable),
         )
 
+    @staticmethod
+    def _unique_violations(errors: list[Any]) -> list[Violation]:
+        violations: list[Violation] = []
+        seen: set[tuple[str, str, int, int]] = set()
+        for error in errors:
+            violation = Engine._violation(error)
+            identity = (
+                violation.code,
+                violation.description,
+                violation.line,
+                violation.column,
+            )
+            if identity not in seen:
+                seen.add(identity)
+                violations.append(violation)
+        return violations
+
     def _lint_string_locked(
         self, sql: str, path: Path, fix: bool = False
     ) -> tuple[Any, list[Violation]]:
@@ -110,13 +127,12 @@ class Engine:
                 fix=fix,
                 config=file_config,
             )
-            violations = [
-                self._violation(error)
-                for error in linted.get_violations(
+            violations = self._unique_violations(
+                linted.get_violations(
                     filter_ignore=True,
                     filter_warning=False,
                 )
-            ]
+            )
             return linted, violations
         except SQLFluffUserError as error:
             raise EngineError(str(error)) from error

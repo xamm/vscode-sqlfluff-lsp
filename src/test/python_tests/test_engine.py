@@ -4,6 +4,7 @@
 
 from collections.abc import Iterator
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
@@ -56,6 +57,23 @@ def test_warning_violations_are_retained(tmp_path: Path) -> None:
     assert any(
         violation.code == "LT09" and violation.warning for violation in violations
     )
+
+
+def test_duplicate_violations_are_removed() -> None:
+    """Visually identical SQLFluff results produce one frontend violation."""
+    error = Mock(fixable=True)
+    error.to_dict.return_value = {
+        "code": "CP01",
+        "description": "Keywords must be upper case.",
+        "name": "capitalisation.keywords",
+        "start_line_no": 1,
+        "start_line_pos": 1,
+    }
+
+    violations = Engine._unique_violations([error, error])
+
+    assert len(violations) == 1
+    assert violations[0].code == "CP01"
 
 
 def test_dbt_lint_fix_and_cached_reload() -> None:
