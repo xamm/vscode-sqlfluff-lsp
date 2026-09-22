@@ -1,10 +1,13 @@
-# TODO: The maintainer of this repo has not yet edited this file
+# Security
 
-**Repo Owner** Make sure you update this. As a repository owner you will need to decide how you want to handle reporting of security issues for your project.
+## Reporting a vulnerability
+
+Please do not report security vulnerabilities through public GitHub issues.
+Use the repository's GitHub Security Advisories page to report a vulnerability
+privately, or contact the maintainers through the support channel in
+`SUPPORT.md` if private reporting is unavailable.
 
 ---
-
-** Content below this line is the Security information for the template itself **
 
 <!-- BEGIN MICROSOFT SECURITY.MD V0.0.7 BLOCK -->
 
