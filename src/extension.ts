@@ -66,10 +66,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         }
 
         traceError(
-            'Python interpreter missing:\r\n' +
-                '[Option 1] Select python interpreter using the ms-python.python.\r\n' +
-                `[Option 2] Set an interpreter using "${serverId}.interpreter" setting.\r\n` +
-                'Please use Python 3.8 or greater.',
+            'Python interpreter missing or incompatible:\r\n' +
+                '[Option 1] Select a Python 3.10+ environment with SQLFluff installed using ms-python.python.\r\n' +
+                `[Option 2] Set that interpreter using the "${serverId}.interpreter" setting.`,
         );
     };
 

@@ -9,7 +9,6 @@ export interface ISettings {
     cwd: string;
     workspace: string;
     interpreter: string[];
-    importStrategy: string;
     showNotifications: string;
     diagnosticSeverity?: string;
     dialect?: string;
@@ -66,7 +65,6 @@ export async function getWorkspaceSettings(
         cwd: workspace.uri.fsPath,
         workspace: workspace.uri.toString(),
         interpreter: resolveVariables(interpreter, workspace),
-        importStrategy: config.get<string>(`importStrategy`) ?? 'useBundled',
         showNotifications: config.get<string>(`showNotifications`) ?? 'off',
         diagnosticSeverity: config.get<string>('diagnosticSeverity', 'warning') ?? 'warning',
         dialect: config.get<string>('dialect') ?? undefined,
@@ -95,7 +93,6 @@ export async function getGlobalSettings(namespace: string, includeInterpreter?: 
         cwd: process.cwd(),
         workspace: process.cwd(),
         interpreter: interpreter,
-        importStrategy: getGlobalValue<string>(config, 'importStrategy', 'useBundled'),
         showNotifications: getGlobalValue<string>(config, 'showNotifications', 'off'),
         diagnosticSeverity: getGlobalValue<string>(config, 'diagnosticSeverity', 'warning'),
         dialect: getGlobalValue<string>(config, 'dialect', ''),
@@ -107,7 +104,6 @@ export async function getGlobalSettings(namespace: string, includeInterpreter?: 
 export function checkIfConfigurationChanged(e: ConfigurationChangeEvent, namespace: string): boolean {
     const settings = [
         `${namespace}.interpreter`,
-        `${namespace}.importStrategy`,
         `${namespace}.showNotifications`,
         `${namespace}.diagnosticSeverity`,
         `${namespace}.dialect`,

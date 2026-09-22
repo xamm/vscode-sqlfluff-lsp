@@ -5,3 +5,24 @@
 [tools]
 python = ["3.10", "3.14"]
 uv = "0.12"
+
+[tasks.bundle]
+description = "Build the bundled LSP protocol runtime"
+run = "uvx nox -s setup"
+
+[tasks.bump]
+description = "Update Python and npm dependencies within declared version ranges"
+run = [
+	"uv lock --upgrade",
+	"npm update --lockfile-version=2",
+]
+
+[tasks.package]
+description = "Build the VS Code extension package"
+depends = ["bundle"]
+run = "npm run vsce-package"
+
+[tasks.publish]
+description = "Publish the packaged extension to the VS Code Marketplace"
+depends = ["package"]
+run = "npx vsce publish --packagePath sqlfluff.vsix"
