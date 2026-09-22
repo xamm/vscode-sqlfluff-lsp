@@ -1,17 +1,22 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-"""All the action we need during build"""
+"""All the action we need during build."""
 
 import os
 import pathlib
+import shutil
 import tempfile
-from typing import List
 
-import nox  # pylint: disable=import-error
+import nox
+
+BUNDLE_ROOT = pathlib.Path(__file__).parent / "bundled"
+BUNDLED_PROTOCOL = BUNDLE_ROOT / "protocol"
 
 
 def _install_bundle(session: nox.Session) -> None:
-    """Vendors the locked runtime dependencies for the extension bundle."""
+    """Vendor the pure-Python LSP runtime used with environment SQLFluff."""
+    shutil.rmtree(BUNDLED_PROTOCOL, ignore_errors=True)
+    BUNDLED_PROTOCOL.mkdir(parents=True)
     with tempfile.TemporaryDirectory() as temp_dir:
         export_file = pathlib.Path(temp_dir) / "bundle-export.txt"
         session.run(
@@ -19,8 +24,10 @@ def _install_bundle(session: nox.Session) -> None:
             "export",
             "--locked",
             "--no-dev",
-            "--extra",
-            "dbt",
+            "--prune",
+            "mcp",
+            "--prune",
+            "sqlfluff",
             "--no-emit-project",
             "--output-file",
             os.fspath(export_file),
@@ -30,10 +37,8 @@ def _install_bundle(session: nox.Session) -> None:
             "uv",
             "pip",
             "install",
-            "--python",
-            "3.10",
             "--target",
-            "./bundled/libs",
+            os.fspath(BUNDLED_PROTOCOL),
             "--no-deps",
             "-r",
             os.fspath(export_file),
@@ -60,17 +65,6 @@ def _sync_project(session: nox.Session, *groups: str) -> None:
     )
 
 
-def _check_files(names: List[str]) -> None:
-    root_dir = pathlib.Path(__file__).parent
-    for name in names:
-        file_path = root_dir / name
-        lines: List[str] = file_path.read_text().splitlines()
-        if any(line for line in lines if line.startswith("# TODO:")):
-            raise Exception(  # pylint: disable=broad-exception-raised
-                f"Please update {os.fspath(file_path)}."
-            )
-
-
 @nox.session(venv_backend="none")
 def setup(session: nox.Session) -> None:
     """Sets up the template for development."""
@@ -80,6 +74,7 @@ def setup(session: nox.Session) -> None:
 @nox.session(venv_backend="uv", python=["3.10", "3.14"])
 def tests(session: nox.Session) -> None:
     """Runs all the tests for the extension."""
+    _install_bundle(session)
     _sync_project(session, "test")
     session.run("pytest", "src/test/python_tests")
 
@@ -88,43 +83,20 @@ def tests(session: nox.Session) -> None:
 def lint(session: nox.Session) -> None:
     """Runs linter and formatter checks on python files."""
     _sync_project(session, "test", "lint")
-    session.run("pylint", "-d", "W0511", "./bundled/tool")
-    session.run(
-        "pylint",
-        "-d",
-        "W0511",
-        "--ignore=./src/test/python_tests/test_data",
+    python_paths = [
+        "./bundled/tool",
+        "./sqlfluff_lsp",
         "./src/test/python_tests",
+        "noxfile.py",
+    ]
+    session.run("ruff", "check", *python_paths)
+    session.run(
+        "ruff",
+        "format",
+        "--check",
+        *python_paths,
     )
-    session.run("pylint", "-d", "W0511", "noxfile.py")
-
-    # check formatting using black
-    session.run("black", "--check", "./bundled/tool")
-    session.run("black", "--check", "./sqlfluff_lsp")
-    session.run("black", "--check", "./src/test/python_tests")
-    session.run("black", "--check", "noxfile.py")
-
-    # check import sorting using isort
-    session.run("isort", "--profile", "black", "--check", "./bundled/tool")
-    session.run("isort", "--profile", "black", "--check", "./sqlfluff_lsp")
-    session.run("isort", "--profile", "black", "--check", "./src/test/python_tests")
-    session.run("isort", "--profile", "black", "--check", "noxfile.py")
+    session.run("pyright")
 
     # check typescript code
     session.run("npm", "run", "lint", external=True)
-
-
-@nox.session(venv_backend="none")
-def build_package(session: nox.Session) -> None:
-    """Builds VSIX package for publishing."""
-    _check_files(["README.md", "LICENSE", "SECURITY.md", "SUPPORT.md"])
-    _install_bundle(session)
-    session.run("npm", "install", external=True)
-    session.run("npm", "run", "vsce-package", external=True)
-
-
-@nox.session(venv_backend="none")
-def update_packages(session: nox.Session) -> None:
-    """Update Python and npm dependencies within declared version ranges."""
-    session.run("uv", "lock", "--upgrade", external=True)
-    session.run("npm", "update", "--lockfile-version=2", external=True)

@@ -28,7 +28,6 @@ async def test_mcp_lint_fix_and_reload() -> None:
         },
     )
     try:
-        # pylint: disable=used-before-assignment
         async with (
             stdio_client(server) as (read_stream, write_stream),
             ClientSession(read_stream, write_stream) as client,

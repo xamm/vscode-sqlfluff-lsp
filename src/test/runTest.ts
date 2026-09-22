@@ -10,11 +10,7 @@ async function makeWorkspace(fixtureDirectory: string, python: string): Promise<
     fsExtra.ensureDirSync(path.join(workspace, '.vscode'));
     fs.writeFileSync(
         path.join(workspace, '.vscode', 'settings.json'),
-        `${JSON.stringify(
-            { ['sqlfluff.interpreter']: [python], ['sqlfluff.importStrategy']: 'fromEnvironment' },
-            null,
-            2,
-        )}\n`,
+        `${JSON.stringify({ ['sqlfluff.interpreter']: [python] }, null, 2)}\n`,
     );
     return workspace;
 }

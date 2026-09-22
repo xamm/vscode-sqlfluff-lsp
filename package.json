@@ -77,20 +77,6 @@
     "contributes": {
         "configuration": {
             "properties": {
-                "sqlfluff.importStrategy": {
-                    "default": "useBundled",
-                    "description": "Defines where SQLFluff is imported from.",
-                    "enum": [
-                        "useBundled",
-                        "fromEnvironment"
-                    ],
-                    "enumDescriptions": [
-                        "Always use the bundled version of `sqlfluff`.",
-                        "Use `sqlfluff` from environment, fallback to bundled version only if `sqlfluff` not available in the environment."
-                    ],
-                    "scope": "resource",
-                    "type": "string"
-                },
                 "sqlfluff.interpreter": {
                     "default": [],
                     "description": "Python interpreter path used to run the SQLFluff server.",

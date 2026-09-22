@@ -12,10 +12,10 @@ import {
 } from 'vscode-languageclient/node';
 import { DEBUG_SERVER_SCRIPT_PATH, SERVER_SCRIPT_PATH } from './constants';
 import { traceError, traceInfo, traceVerbose } from './log/logging';
-import { getDebuggerPath } from './python';
+import { getDebuggerPath, runPythonExtensionCommand } from './python';
 import { getExtensionSettings, getGlobalSettings, getWorkspaceSettings, ISettings } from './settings';
 import { getLSClientTraceLevel, getProjectRoot } from './utilities';
-import { isVirtualWorkspace } from './vscodeapi';
+import { isVirtualWorkspace, showErrorMessage } from './vscodeapi';
 
 export type IInitOptions = { settings: ISettings[]; globalSettings: ISettings };
 
@@ -38,9 +38,6 @@ async function createServer(
     } else {
         newEnv.USE_DEBUGPY = 'False';
     }
-
-    // Set import strategy
-    newEnv.LS_IMPORT_STRATEGY = settings.importStrategy;
 
     // Set notification type
     newEnv.LS_SHOW_NOTIFICATION = settings.showNotifications;
@@ -123,6 +120,16 @@ export async function restartServer(
         await newLSClient.start();
     } catch (ex) {
         traceError(`Server: Start failed: ${ex}`);
+        const action = await showErrorMessage(
+            'SQLFluff could not start. Install SQLFluff in the selected Python environment, then select that interpreter.',
+            'Select Interpreter',
+            'Show Output',
+        );
+        if (action === 'Select Interpreter') {
+            await runPythonExtensionCommand('python.setInterpreter');
+        } else if (action === 'Show Output') {
+            outputChannel.show(true);
+        }
         return undefined;
     }
 

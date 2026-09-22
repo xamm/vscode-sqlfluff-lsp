@@ -25,6 +25,10 @@ export function registerCommand(command: string, callback: (...args: any[]) => a
     return commands.registerCommand(command, callback, thisArg);
 }
 
+export function showErrorMessage(message: string, ...items: string[]): Thenable<string | undefined> {
+    return window.showErrorMessage(message, ...items);
+}
+
 export const { onDidChangeConfiguration } = workspace;
 
 export function isVirtualWorkspace(): boolean {

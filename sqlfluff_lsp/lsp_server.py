@@ -255,7 +255,7 @@ def initialize(params: lsp.InitializeParams) -> None:
         params.initialization_options
     )
     options = {**options, **_CLI_OVERRIDES}
-    root_value = configured_root or params.root_path or os.getcwd()
+    root_value = configured_root or params.root_path or pathlib.Path.cwd()
     root = pathlib.Path(root_value).expanduser()
     overrides = {
         key: str(options[key]) for key in ("dialect", "templater") if options.get(key)

@@ -16,17 +16,42 @@ alive so dbt projects do not reload their manifest for every request.
 
 ## Requirements
 
-- Python 3.10 or above
+- Python 3.10 or above with SQLFluff installed
 - VS Code 1.138.0 or above for the extension
 - Python extension for VS Code
+
+## VS Code Quick Start
+
+Install SQLFluff in the Python environment used by your project. For example:
+
+```bash
+# Standard virtual environment
+python -m pip install sqlfluff
+
+# uv-managed project
+uv add --dev sqlfluff
+```
+
+Then run **Python: Select Interpreter** in VS Code and select that environment.
+The extension follows the interpreter selected by the Python extension and
+restarts automatically when it changes. Alternatively, set
+`sqlfluff.interpreter` to the interpreter path for the workspace.
+
+For dbt projects, install the templater and your adapter in the same
+environment, for example:
+
+```bash
+python -m pip install sqlfluff sqlfluff-templater-dbt dbt-snowflake
+```
+
+Project installation alone is sufficient when that project environment is the
+selected VS Code interpreter. If startup fails, the extension offers actions
+to select another interpreter or open the SQLFluff output channel.
 
 ## Extension Settings
 
 The extension contributes these settings:
 
-* `sqlfluff.importStrategy`: Controls whether bundled or environment Python
-  dependencies are preferred (`useBundled` or `fromEnvironment`)
-* `sqlfluff.interpreter`: Python interpreter to use for the server
 * `sqlfluff.showNotifications`: Controls when server notifications are shown
 * `sqlfluff.diagnosticSeverity`: Severity for SQLFluff diagnostics (`error`,
   `warning`, `information`, or `hint`)
@@ -196,10 +221,8 @@ PostgreSQL, Redshift, Snowflake, SparkSQL, SQLite, Teradata, and TSQL.
 4. Review diagnostics or call the MCP `lint` tool.
 5. Format with `Format Document` or call MCP `fix` in dry-run mode first.
 
-## Development
-
-Install the declared toolchain (Python 3.10 floor, 3.14 current, uv) and Node
-dependencies:
+Install the declared toolchain (Python 3.10 is the supported floor and Python
+3.14 is the current development runtime) and Node dependencies:
 
 ```bash
 mise install
@@ -225,17 +248,27 @@ uvx nox -s tests     # runs on Python 3.10 and 3.14
 uvx nox -P 3.14 -s lint
 ```
 
+Build the protocol bundle and VSIX through mise. Publishing requires VSCE
+marketplace credentials in the environment:
+
+```bash
+mise run package
+mise run publish
+```
+
 Upgrade dependencies within their declared version ranges:
 
 ```bash
-uv lock --upgrade
-npm update --lockfile-version=2
+mise run bump
 ```
 
-The same safe sequence is available through `uvx nox -s update_packages`. Major upgrades require deliberate constraint and compatibility changes in `pyproject.toml` or `package.json`.
+Major upgrades require deliberate constraint and compatibility changes in
+`pyproject.toml` or `package.json`.
 
-Linting runs on Oxlint (`.oxlintrc.json`) with `curly`, `eqeqeq`, and the
-native `no-throw-literal` rule. The former
+Python linting, formatting, and type checking run through Ruff and Pyright in
+`uvx nox -P 3.14 -s lint`. TypeScript linting runs on Oxlint
+(`.oxlintrc.json`) with `curly`, `eqeqeq`, and the native `no-throw-literal`
+rule. The former
 `@typescript-eslint/naming-convention` rule is not yet implemented in Oxlint
 or tsgolint (tracked in oxc-project/oxc#481); the codebase conforms to it
 today — re-add the rule when Oxlint ships it. Formatting runs on Oxfmt
