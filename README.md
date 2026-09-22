@@ -262,6 +262,12 @@ Upgrade dependencies within their declared version ranges:
 mise run bump
 ```
 
+Set the release version across npm and Python metadata before packaging:
+
+```bash
+mise run bump-version 2.1.0
+```
+
 Major upgrades require deliberate constraint and compatibility changes in
 `pyproject.toml` or `package.json`.
 

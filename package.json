@@ -2,7 +2,7 @@
     "name": "vscode-sqlfluff-lsp",
     "displayName": "SQLFluff for VS Code",
     "description": "Linting and formatting for SQL files using SQLFluff, with support for multiple dialects and project configuration.",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "preview": true,
     "serverInfo": {
         "name": "SQLFluff",

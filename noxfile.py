@@ -85,6 +85,7 @@ def lint(session: nox.Session) -> None:
     _sync_project(session, "test", "lint")
     python_paths = [
         "./bundled/tool",
+        "./scripts",
         "./sqlfluff_lsp",
         "./src/test/python_tests",
         "noxfile.py",

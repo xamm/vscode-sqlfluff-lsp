@@ -17,6 +17,11 @@ run = [
 	"npm update --lockfile-version=2",
 ]
 
+[tasks.bump-version]
+description = "Set the npm, Python package, and runtime release version"
+usage = 'arg "<version>" help="Release version in MAJOR.MINOR.PATCH format"'
+run = 'python scripts/bump_version.py "${usage_version?}"'
+
 [tasks.package]
 description = "Build the VS Code extension package"
 depends = ["bundle"]
