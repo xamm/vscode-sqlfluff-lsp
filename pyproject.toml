@@ -30,7 +30,7 @@ test = [
 lint = [
     "nox",
     "pyright>=1.1.410,<2",
-    "ruff>=0.16.3,<0.17",
+    "ruff>=0.16.3,<0.18",
 ]
 
 [project.scripts]
